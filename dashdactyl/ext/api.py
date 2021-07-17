@@ -34,12 +34,12 @@ class Dashdactyl:
         
         if 200 >= res.status_code < 400:
             return res.json()
-        else:
-            return {'status': 'failed', 'code': res.status_code}
+        
+        return {'status': 'failed', 'code': res.status_code}
     
     def get_user(self, id: str) -> DashUser:
         data = self.request('GET', f'/api/userinfo/?id={id}')
-        if data is None:
+        if data['status'] != 'success':
             return 'Invalid User ID'
         
         return DashUser(self, data)
