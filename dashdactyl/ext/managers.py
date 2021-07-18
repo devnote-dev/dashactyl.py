@@ -1,6 +1,8 @@
 from .api import Dashdactyl
-from .structures import DashUser
-from typing import Union
+from .structures import DashServer, DashUser
+from typing import List, Union
+
+MAX_AMOUNT = int('9' * 15)
 
 
 class CoinsManager:
@@ -22,7 +24,7 @@ class CoinsManager:
         if isinstance(self.user, DashUser):
             user = self.user.username
         
-        if 0 < amount > int('9' * 15):
+        if 0 < amount > MAX_AMOUNT:
             raise ValueError('amount must be between 1 and 9 hundred-trillion')
         
         res = self.client.request('POST', '/api/addcoins', {'id': str(user), 'amount': amount})
@@ -48,7 +50,7 @@ class CoinsManager:
         if amount < 0:
             amount = 0
         
-        if 0 < amount > int('9' * 15):
+        if 0 < amount > MAX_AMOUNT:
             raise ValueError('amount must be between 1 and 9 hundred-trillion')
         
         res = self.client.request('POST', '/api/setcoins', {'id': str(user), 'amount': amount})
@@ -65,7 +67,7 @@ class CoinsManager:
         if isinstance(self.user, DashUser):
             user = self.user.username
         
-        if 0 < amount > int('9' * 15):
+        if 0 < amount > MAX_AMOUNT:
             raise ValueError('amount must be between 1 and 9 hundred-trillion')
         
         res = self.client.request('POST', '/api/setcoins', {'id': str(user), 'amount': amount})
@@ -126,3 +128,78 @@ class ResourceManager:
             servers: int=None,
             package: str=None):
         return NotImplemented
+
+
+class DashServerManager:
+    def __init__(self, client: Dashdactyl, *data: Union[dict, DashServer]):
+        self.client = client
+        self.cache = {}
+        self.__patch(*data)
+    
+    def __patch(self, *data):
+        for s in data:
+            if isinstance(s, DashServer):
+                self.cache[s.uuid] = s
+            else:
+                s = DashServer(self.client, s)
+                self.cache[s.uuid] = s
+    
+    def resolve(self, data: dict) -> List[DashServer]:
+        # only resoles from user data
+        if 'relationships' in data:
+            # fallback for invalid or malformed data
+            raise KeyError('relationships not present in data')
+        
+        res = []
+        for o in data['relationships']['servers']['data']:
+            s = DashServer(self.client, o)
+            res.append(s)
+        
+        return res
+    
+    def get(self, id: str) -> Union[DashServer, None]:
+        for k in self.cache.keys():
+            if id in k:
+                return self.cache[k]
+        
+        return None
+    
+    def create(self,
+                name: str,
+                ram: float,
+                disk: float,
+                cpu: float,
+                egg: str,
+                location: str) -> DashServer:
+        if (0 < ram > MAX_AMOUNT or
+            0 < disk > MAX_AMOUNT or
+            0 < cpu > MAX_AMOUNT):
+            raise ValueError('server specs params must be between 1 and 9 hundred-trillion')
+        
+        data = self.client.request('GET',
+                                    f'/create?name={name}' \
+                                    f'&ram={str(ram)}' \
+                                    f'&disk={str(disk)}' \
+                                    f'&cpu={str(cpu)}' \
+                                    f'&egg={egg}' \
+                                    f'&location={location}')
+        if data['status'] != 'success':
+            return data
+        
+        s = DashServer(self.client, data)
+        self.cache[s.uuid] = s
+        return s
+    
+    def delete(self, id: str) -> Union[bool, dict]:
+        s = self.get(id)
+        if isinstance(s, DashServer):
+            del self.cache[s.uuid]
+            s.delete()
+            del s
+            return True
+        
+        res = self.client.request('GET', f'/delete?id={id}')
+        if 'status' in res:
+            return res
+        
+        return True
