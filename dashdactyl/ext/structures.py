@@ -1,6 +1,6 @@
 # Dashdactyl.py Class Structures
 from .api import Dashdactyl
-from .managers import CoinsManager, ResourceManager
+from .managers import CoinsManager, ResourceManager, DashServerManager
 
 
 class DashUser:
@@ -28,7 +28,7 @@ class DashUser:
         self.updated_at = att['updated_at'] or None
         
         self.coins = CoinsManager(client, self)
-        self.servers = [DashServer(s) for s in att['relationships']['servers']['data']]
+        self.servers = DashServerManager(client, att)
         self.resources = ResourceManager(self, data)
     
     @property
@@ -39,7 +39,7 @@ class DashUser:
         if self.ip is None:
             res = self.client.request('GET', f'/getip?id=${self.id}')
             if 'status' in res:
-                return None
+                return res
             
             self.ip = res['ip']
             return res['ip']
