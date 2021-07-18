@@ -99,11 +99,30 @@ class ResourceManager:
             self.cpu += data['extra']['cpu']
             self.servers += data['extra']['servers']
     
-    def add(self, resources: dict):
+    # Functions below this method WONT be implemented until Dashdactyl
+    # updates the API methods for the respective endpoints:
+    # -> add = POST
+    # -> remove = PATCH
+    # -> set = PUT
+    
+    def add(self,
+            ram: float=None,
+            disk: float=None,
+            cpu: float=None,
+            servers: int=None):
         return NotImplemented
     
-    def remove(self, resources: dict):
+    def remove(self,
+                ram: float=None,
+                disk: float=None,
+                cpu: float=None,
+                servers: int=None):
         return NotImplemented
     
-    def set(self, resources: dict):
+    def set(self,
+            ram: float=None,
+            disk: float=None,
+            cpu: float=None,
+            servers: int=None,
+            package: str=None):
         return NotImplemented
