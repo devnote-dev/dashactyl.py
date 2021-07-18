@@ -1,4 +1,5 @@
 # Dashdactyl.py Class Structures
+from .api import Dashdactyl
 from .managers import CoinsManager, ResourceManager
 
 
@@ -7,14 +8,16 @@ class DashUser:
     
     TODO: additional helper methods for resources
     '''
-    def __init__(self, client, data):
+    def __init__(self, client: Dashdactyl, data: dict):
         att = data['userinfo']['attributes']
+        self.client = client
         self.id = att['id']
         self.uuid = att['uuid']
         self.admin = att['root_admin']
         
-        self.username = att['username']
         self.email = att['email']
+        self.ip = None # Fetch on function call
+        self.username = att['username']
         self.firstname = att['first_name']
         self.lastname = att['last_name']
         
@@ -27,12 +30,30 @@ class DashUser:
         self.coins = CoinsManager(client, self)
         self.servers = [DashServer(s) for s in att['relationships']['servers']['data']]
         self.resources = ResourceManager(self, data)
+    
+    @property
+    def tag(self) -> str:
+        return self.firstname + self.lastname
+    
+    def get_ip(self) -> str:
+        if self.ip is None:
+            res = self.client.request('GET', f'/getip?id=${self.id}')
+            if 'status' in res:
+                return None
+            
+            self.ip = res['ip']
+            return res['ip']
+    
+    def remove(self):
+        # This should be changed to DELETE...
+        return self.client.request('GET', f'/api/remove_account')
 
 
 # TODO: helper functions for server class
 class DashServer:
-    def __init__(self, data):
+    def __init__(self, client: Dashdactyl, data: dict):
         att = data['attributes']
+        self.client = client
         self.id = att['id']
         self.uuid = att['uuid']
         self.identifier = att['identifier']
@@ -61,4 +82,4 @@ class DashServer:
         return NotImplemented
     
     def delete(self):
-        return NotImplemented
+        return self.client.request('GET', f'/delete?id={self.id}')
