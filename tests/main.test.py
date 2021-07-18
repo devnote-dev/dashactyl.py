@@ -1,4 +1,4 @@
-from ..dashdactyl.api import Dashdactyl
+from ..dashdactyl import Dashdactyl
 
 dash = Dashdactyl('https://client.dynox.us', '$omeFak3AP1Key') # I'm not creative
 
