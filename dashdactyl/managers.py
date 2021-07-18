@@ -1,11 +1,9 @@
 from .api import Dashdactyl
-from .structures import DashServer, DashUser
-from typing import List, Union
+from .structures import DashServer, DashUser, Coupon
+from typing import Union, List
 
 
-__all__ = ['CoinsManager',
-            'ResourceManager',
-            'DashServerManager']
+__all__ = ['CoinsManager', 'ResourceManager', 'DashServerManager']
 
 MAX_AMOUNT = int('9' * 15)
 
@@ -105,11 +103,11 @@ class ResourceManager:
             self.cpu += data['extra']['cpu']
             self.servers += data['extra']['servers']
     
-    # Functions below this method WONT be implemented until Dashdactyl
+    # Functions below this message WONT be implemented until Dashdactyl
     # updates the API methods for the respective endpoints:
-    # -> add = POST
-    # -> remove = PATCH
-    # -> set = PUT
+    # - add: POST
+    # - remove: PATCH
+    # - set: PUT
     
     def add(self,
             ram: float=None,
@@ -194,7 +192,7 @@ class DashServerManager:
         self.cache[s.uuid] = s
         return s
     
-    def delete(self, id: str) -> Union[bool, dict]:
+    def delete(self, id: str) -> dict:
         s = self.get(id)
         if isinstance(s, DashServer):
             del self.cache[s.uuid]
@@ -202,8 +200,50 @@ class DashServerManager:
             del s
             return True
         
-        res = self.client.request('GET', f'/delete?id={id}')
-        if 'status' in res:
-            return res
+        return self.client.request('GET', f'/delete?id={id}')
+
+
+class CouponManager:
+    def __init__(self, client: Dashdactyl):
+        self.client = client
+        self.cache = {}
+    
+    def fetch(self, code: str=None):
+        # not implemented on Dashdactyl's side
+        return NotImplemented
+    
+    def get(self, code: str):
+        # broken because of fetch
+        return NotImplemented
+    
+    def create(self,
+                code: str=None,
+                coins: int=0,
+                ram: float=0,
+                disk: float=0,
+                cpu: float=0,
+                servers: int=0) -> Coupon:
+        if (0 < coins > MAX_AMOUNT or
+            0 < ram > MAX_AMOUNT or
+            0 < disk > MAX_AMOUNT or
+            0 < cpu > MAX_AMOUNT or
+            0 < servers > 10):
+            raise ValueError('amount must be between 1 and 9 hundred-trillion (or servers which is 10)')
         
-        return True
+        if (not code and not (coins or ram or disk or cpu or servers)):
+            raise ValueError('no valid parameters provided')
+        
+        data = self.client.request('POST', '/createcoupon',
+                                    {'code': code, 'coins': coins, 'ram': ram, 'disk': disk, 'cpu': cpu, 'servers': servers})
+        if 'status' in data:
+            return data
+        
+        c = Coupon(data)
+        self.cache[c.code] = c
+        return c
+    
+    def revoke(self, code: str) -> dict:
+        if self.get(code):
+            del self.cache[code]
+        
+        return self.client.request('POST', '/revokecoupon', {'code': code})
