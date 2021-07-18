@@ -1,4 +1,4 @@
-from typing import Union
+from dashdactyl.ext.managers import DashServerManager
 import requests
 from json import dumps
 from .structures import DashUser
@@ -11,6 +11,9 @@ class Dashdactyl:
     def __init__(self, domain: str, auth: str):
         self.domain = domain
         self.auth = 'Bearer '+ auth
+        
+        self.users = None # haven't created user manager yet
+        self.servers = DashServerManager(self)
     
     def request(self, method: str, path: str, params: dict={}) -> dict:
         if method not in ('GET', 'POST', 'DELETE'):
@@ -33,13 +36,18 @@ class Dashdactyl:
                     headers={'Content-Type': 'application/json',
                             'Authorization': self.auth})
         
-        if 200 >= res.status_code < 400:
+        if res.ok:
             if res.status_code == 204:
                 return {'status': 'success'}
             
             return res.json()
         
-        return {'status': 'failed', 'code': res.status_code}
+        return {'status': 'failed',
+                'code': res.status_code,
+                'message': res.reason}
+    
+    def ping(self):
+        return self.request('GET', '/api')
     
     def get_user(self, id: str) -> DashUser:
         data = self.request('GET', f'/api/userinfo/?id={id}')
@@ -47,16 +55,6 @@ class Dashdactyl:
             return 'Invalid User ID'
         
         return DashUser(self, data)
-    
-    def get_server(self, id: str):
-        # Not implemented on Dashdactyl's side yet, but I will
-        # look into interacting with ptero directly for this
-        # in the future.
-        return NotImplemented
-    
-    def create_server(self, user: Union[int, DashUser]):
-        # WIP
-        return NotImplemented
     
     def create_coupon(self) -> str:
         res = self.request('GET', '/create_coupon')
