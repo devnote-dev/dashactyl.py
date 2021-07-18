@@ -85,3 +85,13 @@ class DashServer:
     
     def delete(self):
         return self.client.request('GET', f'/delete?id={self.id}')
+
+
+class Coupon:
+    def __init__(self, data: dict):
+        self.code = data['code']
+        self.coins = data['coins'] or 0
+        self.ram = data['ram'] or 0
+        self.disk = data['disk'] or 0
+        self.cpu = data['cpu'] or 0
+        self.servers = data['servers'] or 0
