@@ -1,3 +1,4 @@
+from typing import Union
 import requests
 from json import dumps
 from .structures import DashUser
@@ -33,6 +34,9 @@ class Dashdactyl:
                             'Authorization': self.auth})
         
         if 200 >= res.status_code < 400:
+            if res.status_code == 204:
+                return {'status': 'success'}
+            
             return res.json()
         
         return {'status': 'failed', 'code': res.status_code}
@@ -48,4 +52,23 @@ class Dashdactyl:
         # Not implemented on Dashdactyl's side yet, but I will
         # look into interacting with ptero directly for this
         # in the future.
+        return NotImplemented
+    
+    def create_server(self, user: Union[int, DashUser]):
+        # WIP
+        return NotImplemented
+    
+    def create_coupon(self) -> str:
+        res = self.request('GET', '/create_coupon')
+        if 'status' in res:
+            return res
+        
+        return res['coupon']
+    
+    def revoke_coupon(self, code: str):
+        # This should be switched to the DELETE method...
+        return self.request('GET', f'/revoke_coupon?code={code}')
+    
+    def get_coupons(self):
+        # Would be nice to have this in Dashdactyl :/
         return NotImplemented
