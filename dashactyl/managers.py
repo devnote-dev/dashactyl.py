@@ -7,6 +7,11 @@ __all__ = ['CoinsManager', 'ResourceManager', 'DashServerManager']
 
 MAX_AMOUNT = int('9' * 15)
 
+class DashUserWarning(Exception):
+    '''Warning exception for DashUser errors.'''
+    pass
+
+
 class CoinsManager:
     def __init__(self, client: Dashactyl, user: Union[int, DashUser]):
         self.client = client
@@ -20,7 +25,7 @@ class CoinsManager:
     
     def add(self, amount: int) -> bool:
         if not self.user:
-            raise Exception('no user specified')
+            raise DashUserWarning('user not found')
         
         user = self.user
         if isinstance(self.user, DashUser):
@@ -37,16 +42,16 @@ class CoinsManager:
     
     def remove(self, amount: int) -> bool:
         if not self.user:
-            raise Exception('no user specified')
+            raise DashUserWarning('user not found')
         
         user = self.user
         if isinstance(self.user, DashUser):
             user = self.user.username
         else:
-            user = self.client.get_user(self.user)
+            user = self.client.users.get(self.user)
         
         if not user:
-            raise Exception()
+            raise DashUserWarning('user not found')
         
         amount = user.coins - amount
         if amount < 0:
@@ -63,7 +68,7 @@ class CoinsManager:
     
     def set(self, amount: int) -> bool:
         if not self.user:
-            raise Exception('no user specified')
+            raise DashUserWarning('user not found')
         
         user = self.user
         if isinstance(self.user, DashUser):
@@ -247,3 +252,42 @@ class CouponManager:
             del self.cache[code]
         
         return self.client.request('POST', '/revokecoupon', {'code': code})
+
+
+class DashUserManager:
+    def __init__(self, client: Dashactyl):
+        self.client = client
+        self.cache = {}
+    
+    def fetch(self, id: int) -> DashUser:
+        data = self.client.request('GET', f'/userinfo?id={str(id)}')
+        if data['status'] != 'success':
+            return data
+        
+        u = DashUser(self.client, data)
+        self.cache[u.uuid] = u
+        return u
+    
+    def get(self, id: Union[int, str]) -> DashUser:
+        for k in self.cache.keys():
+            if id in k:
+                return self.cache[k]
+        
+        if type(id) == str:
+            raise Exception('user not found, try with ID instead')
+        
+        return self.fetch(id)
+    
+    def remove(self, user: Union[int, str, DashUser]) -> bool:
+        if isinstance(user, DashUser):
+            del self.cache[user.uuid]
+            user.remove()
+            return True
+        
+        u = self.get(user)
+        if u:
+            del self.cache[u.uuid]
+            u.remove()
+            return True
+        
+        return False
