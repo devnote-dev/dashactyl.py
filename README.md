@@ -8,6 +8,13 @@
 - Dashdactyl version compatibility
 - [Documentation](https://github.com/devnote-dev/dashactyl.py/wiki)!
 
+### Todo
+- [ ] Add typings to structure properties
+- [ ] Implement ResourceManager methods
+- [ ] Redeem enpoint for CouponManager
+- [ ] Store interactions??
+- [ ] Overall testing of the wrapper
+
 ## Installing
 
 ### Windows
