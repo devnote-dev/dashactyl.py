@@ -1,7 +1,6 @@
 import requests
 from json import dumps
-from .managers import DashServerManager, CouponManager
-from .structures import DashUser
+from .managers import DashServerManager, DashUserManager, CouponManager
 
 
 class Dashactyl:
@@ -12,7 +11,7 @@ class Dashactyl:
         self.domain = domain
         self.auth = 'Bearer '+ auth
         
-        self.users = None # haven't created user manager yet
+        self.users = DashUserManager(self)
         self.servers = DashServerManager(self)
         self.coupons = CouponManager(self)
     
@@ -49,10 +48,3 @@ class Dashactyl:
     
     def ping(self):
         return self.request('GET', '/api')
-    
-    def get_user(self, id: str) -> DashUser:
-        data = self.request('GET', f'/api/userinfo/?id={id}')
-        if data['status'] != 'success':
-            return 'Invalid User ID'
-        
-        return DashUser(self, data)
