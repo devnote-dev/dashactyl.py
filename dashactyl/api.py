@@ -4,9 +4,9 @@ from .managers import DashServerManager, CouponManager
 from .structures import DashUser
 
 
-class Dashdactyl:
-    '''# Dashdactyl.py
-    ### An interactive API wrapper for Dashdactyl in Python.
+class Dashactyl:
+    '''# Dashactyl.py
+    ### An interactive API wrapper for Dashactyl in Python.
     '''
     def __init__(self, domain: str, auth: str):
         self.domain = domain

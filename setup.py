@@ -1,5 +1,5 @@
 from setuptools import setup
-from dashdactyl import __version__
+from dashactyl import __version__
 
 
 long_desc = ''
@@ -9,13 +9,13 @@ with open('./README.md') as f:
     del s
 
 
-setup(name='dashdactyl',
+setup(name='dashactyl.py',
         author='Devonte',
-        url='https://github.com/devnote-dev/dashdactyl.py',
+        url='https://github.com/devnote-dev/dashactyl.py',
         license='MIT',
         version=__version__,
-        packages=['dashdactyl'],
-        description='An interactive API wrapper for Dashdactyl in Python.',
+        packages=['dashactyl'],
+        description='An interactive API wrapper for Dashactyl in Python.',
         long_description=long_desc,
         long_desription_content_type='text/markdown',
         include_package_data=True,

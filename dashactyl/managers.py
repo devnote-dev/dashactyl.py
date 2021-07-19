@@ -1,4 +1,4 @@
-from .api import Dashdactyl
+from .api import Dashactyl
 from .structures import DashServer, DashUser, Coupon
 from typing import Union, List
 
@@ -8,7 +8,7 @@ __all__ = ['CoinsManager', 'ResourceManager', 'DashServerManager']
 MAX_AMOUNT = int('9' * 15)
 
 class CoinsManager:
-    def __init__(self, client: Dashdactyl, user: Union[int, DashUser]):
+    def __init__(self, client: Dashactyl, user: Union[int, DashUser]):
         self.client = client
         self.user = user
     
@@ -133,7 +133,7 @@ class ResourceManager:
 
 
 class DashServerManager:
-    def __init__(self, client: Dashdactyl, *data: Union[dict, DashServer]):
+    def __init__(self, client: Dashactyl, *data: Union[dict, DashServer]):
         self.client = client
         self.cache = {}
         self.__patch(*data)
@@ -204,7 +204,7 @@ class DashServerManager:
 
 
 class CouponManager:
-    def __init__(self, client: Dashdactyl):
+    def __init__(self, client: Dashactyl):
         self.client = client
         self.cache = {}
     
