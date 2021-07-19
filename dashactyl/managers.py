@@ -3,7 +3,11 @@ from .structures import DashServer, DashUser, Coupon
 from typing import Union, List
 
 
-__all__ = ['CoinsManager', 'ResourceManager', 'DashServerManager']
+__all__ = ['CoinsManager',
+            'ResourceManager',
+            'DashServerManager',
+            'CouponManager',
+            'DashUserManager']
 
 MAX_AMOUNT = int('9' * 15)
 
@@ -23,7 +27,7 @@ class CoinsManager:
         else:
             return -1
     
-    def add(self, amount: int) -> bool:
+    def add(self, amount: int) -> dict:
         if not self.user:
             raise DashUserWarning('user not found')
         
@@ -135,6 +139,9 @@ class ResourceManager:
             servers: int=None,
             package: str=None):
         return NotImplemented
+    
+    def setplan(self, package: str):
+        return NotImplemented
 
 
 class DashServerManager:
@@ -164,7 +171,7 @@ class DashServerManager:
         
         return res
     
-    def get(self, id: str) -> Union[DashServer, None]:
+    def get(self, id: str) -> DashUser:
         for k in self.cache.keys():
             if id in k:
                 return self.cache[k]
@@ -197,7 +204,7 @@ class DashServerManager:
         self.cache[s.uuid] = s
         return s
     
-    def delete(self, id: str) -> dict:
+    def delete(self, id: str) -> bool:
         s = self.get(id)
         if isinstance(s, DashServer):
             del self.cache[s.uuid]
@@ -205,7 +212,11 @@ class DashServerManager:
             del s
             return True
         
-        return self.client.request('GET', f'/delete?id={id}')
+        res = self.client.request('GET', f'/delete?id={id}')
+        if res['status'] != 'success':
+            return res
+        
+        return True
 
 
 class CouponManager:
@@ -238,7 +249,8 @@ class CouponManager:
         if (not code and not (coins or ram or disk or cpu or servers)):
             raise ValueError('no valid parameters provided')
         
-        data = self.client.request('POST', '/createcoupon',
+        data = self.client.request('POST',
+                                    '/createcoupon',
                                     {'code': code, 'coins': coins, 'ram': ram, 'disk': disk, 'cpu': cpu, 'servers': servers})
         if 'status' in data:
             return data
@@ -260,7 +272,7 @@ class DashUserManager:
         self.cache = {}
     
     def fetch(self, id: int) -> DashUser:
-        data = self.client.request('GET', f'/userinfo?id={str(id)}')
+        data = self.client.request('GET', f'/api/userinfo?id={str(id)}')
         if data['status'] != 'success':
             return data
         
