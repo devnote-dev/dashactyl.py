@@ -1,9 +1,9 @@
 # Dashdactyl.py Class Structures
 from .api import Dashactyl
-from .managers import CoinsManager, ResourceManager, DashServerManager
+from .managers import MAX_AMOUNT, CoinsManager, ResourceManager, DashServerManager
 
 
-__all__ = ['DashUser', 'DashServer']
+__all__ = ['DashUser', 'DashServer', 'Coupon']
 
 class DashUser:
     '''Represents a Dashactyl-Pterodactyl User.
@@ -18,6 +18,7 @@ class DashUser:
         self.admin = att['root_admin']
         
         self.email = att['email']
+        self.password = None # Fetch on funcion call
         self.ip = None # Fetch on function call
         self.username = att['username']
         self.firstname = att['first_name']
@@ -45,6 +46,16 @@ class DashUser:
             
             self.ip = res['ip']
             return res['ip']
+        
+        return self.ip
+    
+    def get_password(self):
+        # I dont know the endpoint for this...
+        return NotImplemented
+    
+    def regen(self):
+        # Not implemented on Dashactyl
+        return NotImplemented
     
     def remove(self):
         # This should be changed to DELETE...
@@ -66,6 +77,7 @@ class DashServer:
         self.limits = att['limits']
         self.feature_limits = att['feature_limits']
         self.user = att['user']
+        self.owner = None # Fetch on function call
         self.node = att['node']
         self.allocation = att['allocation']
         self.nest = att['nest']
@@ -75,16 +87,39 @@ class DashServer:
         self.updated_at = att['updated_at'] or None
     
     def get_owner(self):
-        return NotImplemented
+        if not self.owner:
+            for user in self.client.users.cache:
+                if user.id == self.user:
+                    self.owner = user
+                    break
+        
+        return self.owner
     
     def set_state(self, state: str):
+        # Not implemented on Dashactyl
         return NotImplemented
     
-    def modify(self, data: dict):
-        return NotImplemented
+    def modify(self,
+                ram: float=None,
+                disk: float=None,
+                cpu: float=None) -> bool:
+        if (0 < ram > MAX_AMOUNT or
+            0 < disk > MAX_AMOUNT or
+            0 < cpu > MAX_AMOUNT):
+            raise ValueError('server specs params must be between 1 and 9 hundred-trillion')
+        
+        res = self.client.request('GET', f'/modify?id={self.id}&ram={ram}&disk={disk}&cpu={cpu}')
+        if res['status'] != 'success':
+            return res
+        
+        return True
     
-    def delete(self):
-        return self.client.request('GET', f'/delete?id={self.id}')
+    def delete(self) -> bool:
+        res = self.client.request('GET', f'/delete?id={self.id}')
+        if res['status']:
+            return False
+        
+        return True
 
 
 class Coupon:
