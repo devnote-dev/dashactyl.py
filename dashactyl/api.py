@@ -8,6 +8,12 @@ class Dashactyl:
     ### An interactive API wrapper for Dashactyl in Python.
     '''
     def __init__(self, domain: str, auth: str):
+        '''`domain` - The Dashactyl panel domain
+
+        `auth` - The authentication key for the Pterodactyl panel
+        
+        Creates a new client to interact with Dashactyl.
+        '''
         self.domain = domain
         self.auth = 'Bearer '+ auth
         
@@ -16,6 +22,16 @@ class Dashactyl:
         self.coupons = CouponManager(self)
     
     def request(self, method: str, path: str, params: dict={}) -> dict:
+        '''### Not for public use.
+        
+        `method` - The HTTP method for the request
+        
+        `path` - The path to request
+        
+        `params` - Optional additional parameters for the request
+        
+        Performs an API request to the path then returns a dict response.
+        '''
         if method not in ('GET', 'POST', 'DELETE'):
             raise ValueError("method must be 'GET', 'POST', or 'DELETE'.")
         
@@ -47,4 +63,5 @@ class Dashactyl:
                 'message': res.reason}
     
     def ping(self):
+        '''Pings the Dashactyl API.'''
         return self.request('GET', '/api')

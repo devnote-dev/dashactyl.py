@@ -1,6 +1,7 @@
 # Dashdactyl.py Class Structures
 from .api import Dashactyl
 from .managers import MAX_AMOUNT, CoinsManager, ResourceManager, DashServerManager
+from typing import Union
 
 
 __all__ = ['DashUser', 'DashServer', 'Coupon']
@@ -30,7 +31,7 @@ class DashUser:
         self.created_at = att['created_at']
         self.updated_at = att['updated_at'] or None
         
-        self.coins = CoinsManager(client, self)
+        self.coins = CoinsManager(client, self, data)
         self.servers = DashServerManager(client, att)
         self.resources = ResourceManager(self, data)
     
@@ -39,6 +40,7 @@ class DashUser:
         return self.firstname + self.lastname
     
     def get_ip(self) -> str:
+        '''Fetches the IP of the user.'''
         if self.ip is None:
             res = self.client.request('GET', f'/getip?id=${self.id}')
             if 'status' in res:
@@ -50,14 +52,17 @@ class DashUser:
         return self.ip
     
     def get_password(self):
+        '''Fetches the user's password.'''
         # I dont know the endpoint for this...
         return NotImplemented
     
     def regen(self):
+        '''Regenerates the user's password.'''
         # Not implemented on Dashactyl
         return NotImplemented
     
     def remove(self):
+        '''Removes (or deletes) the user's account.'''
         # This should be changed to DELETE...
         return self.client.request('GET', f'/api/remove_account')
 
@@ -86,7 +91,8 @@ class DashServer:
         self.created_at = att['created_at']
         self.updated_at = att['updated_at'] or None
     
-    def get_owner(self):
+    def get_owner(self) -> Union[DashUser, None]:
+        '''Gets the owner of the server. May return `None` if not available.'''
         if not self.owner:
             for user in self.client.users.cache:
                 if user.id == self.user:
@@ -102,7 +108,15 @@ class DashServer:
     def modify(self,
                 ram: float=None,
                 disk: float=None,
-                cpu: float=None) -> bool:
+                cpu: float=None):
+        '''`ram` - The amount of RAM to set
+        
+        `disk` - The amount of disk to set
+        
+        `cpu` - The amount of CPU to set
+        
+        Modifies the RAM, disk, or CPU of the server. Returns the modified server on success.
+        '''
         if (0 < ram > MAX_AMOUNT or
             0 < disk > MAX_AMOUNT or
             0 < cpu > MAX_AMOUNT):
@@ -112,9 +126,10 @@ class DashServer:
         if res['status'] != 'success':
             return res
         
-        return True
+        return self
     
     def delete(self) -> bool:
+        '''Deletes the server.'''
         res = self.client.request('GET', f'/delete?id={self.id}')
         if res['status']:
             return False

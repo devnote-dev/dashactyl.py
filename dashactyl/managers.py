@@ -17,17 +17,29 @@ class DashUserWarning(Exception):
 
 
 class CoinsManager:
-    def __init__(self, client: Dashactyl, user: Union[int, DashUser]):
+    def __init__(self, client: Dashactyl, user: Union[int, DashUser], data: dict):
+        '''`client` - The Dashactyl client
+        
+        `user` - The Dashactyl user the manager is for
+        
+        Creates a new manager for client coins.
+        '''
         self.client = client
         self.user = user
+        self.amount = data['coins']
     
     def __call__(self) -> int:
+        '''Returns the number of coins the user has or -1 if unavailable.'''
         if isinstance(self.user, DashUser):
-            return self.user.coins
+            return self.amount
         else:
             return -1
     
-    def add(self, amount: int) -> dict:
+    def add(self, amount: int) -> int:
+        '''`amount` - The number of coins to add
+        
+        Adds an amount of coins to the user's account. Returns the added coins on success.
+        '''
         if not self.user:
             raise DashUserWarning('user not found')
         
@@ -40,11 +52,16 @@ class CoinsManager:
         
         res = self.client.request('POST', '/api/addcoins', {'id': str(user), 'amount': amount})
         if res['status'] != 'success':
-            return False
-        else:
-            return True
+            return res
+        
+        self.amount += amount
+        return self.amount
     
-    def remove(self, amount: int) -> bool:
+    def remove(self, amount: int) -> int:
+        '''`amount` - The number of coins to remove
+        
+        Removes an amount of coins from the user's account. Returns the removed coins on success.
+        '''
         if not self.user:
             raise DashUserWarning('user not found')
         
@@ -57,7 +74,7 @@ class CoinsManager:
         if not user:
             raise DashUserWarning('user not found')
         
-        amount = user.coins - amount
+        amount = self.amount - amount
         if amount < 0:
             amount = 0
         
@@ -66,11 +83,16 @@ class CoinsManager:
         
         res = self.client.request('POST', '/api/setcoins', {'id': str(user), 'amount': amount})
         if res['status'] != 'success':
-            return False
-        else:
-            return True
+            return res
+        
+        self.amount = amount
+        return self.amount
     
-    def set(self, amount: int) -> bool:
+    def set(self, amount: int) -> int:
+        '''`amount` - The number of coins to set
+        
+        Sets the users coins to the specified amount. Returns the set amount of coins on success.
+        '''
         if not self.user:
             raise DashUserWarning('user not found')
         
@@ -83,18 +105,29 @@ class CoinsManager:
         
         res = self.client.request('POST', '/api/setcoins', {'id': str(user), 'amount': amount})
         if res['status'] != 'success':
-            return False
-        else:
-            return True
+            return res
+        
+        self.amount = amount
+        return self.amount
 
 
 # TODO: helper methods for resources
 class ResourceManager:
-    def __init__(self, user: Union[int, DashUser], data: dict):
+    def __init__(self, client: Dashactyl, user: Union[int, DashUser], data: dict):
+        '''`client` - The Dashactyl client
+        
+        `user` - The Dashactyl user the manager is for
+        
+        `data` - The data to resolve resources from
+        
+        Creates a new manager for client resources.
+        '''
+        self.client = client
         self.user = user
         self.__patch(data)
     
     def __call__(self) -> dict:
+        '''Returns a dict of the user's resources.'''
         return {'ram': self.ram,
                 'disk': self.disk,
                 'cpu': self.cpu,
@@ -146,6 +179,12 @@ class ResourceManager:
 
 class DashServerManager:
     def __init__(self, client: Dashactyl, *data: Union[dict, DashServer]):
+        '''`client` - The Dashactyl client
+        
+        `data` - The data to resolve servers from
+        
+        Creates a new manager for client servers.
+        '''
         self.client = client
         self.cache = {}
         self.__patch(*data)
@@ -159,7 +198,10 @@ class DashServerManager:
                 self.cache[s.uuid] = s
     
     def resolve(self, data: dict) -> List[DashServer]:
-        # only resoles from user data
+        '''`data` - The data to resolve servers from
+        
+        Resolves servers from raw user data.
+        '''
         if 'relationships' in data:
             # fallback for invalid or malformed data
             raise KeyError('relationships not present in data')
@@ -171,7 +213,11 @@ class DashServerManager:
         
         return res
     
-    def get(self, id: str) -> DashUser:
+    def get(self, id: str) -> DashServer:
+        '''`id` - The identifier or UUID of the server
+        
+        Gets a server from the cache, or fetches directly if not available.
+        '''
         for k in self.cache.keys():
             if id in k:
                 return self.cache[k]
@@ -185,6 +231,20 @@ class DashServerManager:
                 cpu: float,
                 egg: str,
                 location: str) -> DashServer:
+        '''`name` - The name of the server
+        
+        `ram` - The amoout of RAM for the server
+        
+        `disk` - The amount of disk for the server
+        
+        `cpu` - The amount of CPU for the server
+        
+        `egg` - The egg for the server
+        
+        `location` - The location of the server
+        
+        Creates a new Pterodactyl server with the specified parameters.
+        '''
         if (0 < ram > MAX_AMOUNT or
             0 < disk > MAX_AMOUNT or
             0 < cpu > MAX_AMOUNT):
@@ -204,23 +264,31 @@ class DashServerManager:
         self.cache[s.uuid] = s
         return s
     
-    def delete(self, id: str) -> bool:
+    def delete(self, id: str):
+        '''`id` - The identifier or UUID of the server
+        
+        Deletes an existing server. Returns `None` on success.
+        '''
         s = self.get(id)
         if isinstance(s, DashServer):
             del self.cache[s.uuid]
             s.delete()
             del s
-            return True
+            return
         
         res = self.client.request('GET', f'/delete?id={id}')
         if res['status'] != 'success':
             return res
         
-        return True
+        return
 
 
 class CouponManager:
     def __init__(self, client: Dashactyl):
+        '''`client` - The Dashactyl client
+        
+        Creates a new manager for client coupons.
+        '''
         self.client = client
         self.cache = {}
     
@@ -239,6 +307,20 @@ class CouponManager:
                 disk: float=0,
                 cpu: float=0,
                 servers: int=0) -> Coupon:
+        '''`code` - The name of the code
+        
+        `coins` - The number of coins the coupon should grant
+        
+        `ram` - The amoout of RAM the coupon should grant
+        
+        `disk` - The amount of disk the coupon should grant
+        
+        `cpu` - The amount of CPU the coupon should grant
+        
+        `servers` - The number of servers the coupon should grant
+        
+        Creates a new coupon with the specified parameters.
+        '''
         if (0 < coins > MAX_AMOUNT or
             0 < ram > MAX_AMOUNT or
             0 < disk > MAX_AMOUNT or
@@ -259,19 +341,36 @@ class CouponManager:
         self.cache[c.code] = c
         return c
     
-    def revoke(self, code: str) -> dict:
+    def revoke(self, code: str):
+        '''`code` - The code of the coupon to revoke
+        
+        Revokes a specified coupon. Returns `None` on success.
+        '''
         if self.get(code):
             del self.cache[code]
         
-        return self.client.request('POST', '/revokecoupon', {'code': code})
+        # This should be DELETE...
+        res = self.client.request('POST', '/revokecoupon', {'code': code})
+        if res['status'] != 'success':
+            return res
+        
+        return
 
 
 class DashUserManager:
     def __init__(self, client: Dashactyl):
+        '''`client` - The Dashactyl client
+        
+        Creates a new manager for client users.
+        '''
         self.client = client
         self.cache = {}
     
     def fetch(self, id: int) -> DashUser:
+        '''`id` - The ID of the user
+        
+        Fetches a user from the API directly.
+        '''
         data = self.client.request('GET', f'/api/userinfo?id={str(id)}')
         if data['status'] != 'success':
             return data
@@ -281,6 +380,10 @@ class DashUserManager:
         return u
     
     def get(self, id: Union[int, str]) -> DashUser:
+        '''`id` - The ID of the user
+        
+        Gets a user from the cache, or fetches directly if unavailable.
+        '''
         for k in self.cache.keys():
             if id in k:
                 return self.cache[k]
@@ -290,16 +393,20 @@ class DashUserManager:
         
         return self.fetch(id)
     
-    def remove(self, user: Union[int, str, DashUser]) -> bool:
+    def remove(self, user: Union[int, str, DashUser]):
+        '''`id` - The ID of the user
+        
+        Removes (or deletes) the specified user's account. Returns `None` on success.
+        '''
         if isinstance(user, DashUser):
             del self.cache[user.uuid]
             user.remove()
-            return True
+            return
         
         u = self.get(user)
         if u:
             del self.cache[u.uuid]
             u.remove()
-            return True
+            return
         
-        return False
+        raise DashUserWarning('user not found')
