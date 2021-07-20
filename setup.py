@@ -9,7 +9,7 @@ with open('./README.md') as f:
     del s
 
 
-setup(name='dashactyl.py',
+setup(name='dashactylpy',
         author='Devonte',
         url='https://github.com/devnote-dev/dashactyl.py',
         license='MIT',

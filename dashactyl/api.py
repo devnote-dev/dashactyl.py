@@ -1,5 +1,6 @@
 import requests
 from json import dumps
+from time import time
 from .managers import DashServerManager, DashUserManager, CouponManager
 
 
@@ -14,7 +15,7 @@ class Dashactyl:
         
         Creates a new client to interact with Dashactyl.
         '''
-        self.domain = domain
+        self.domain = domain.removesuffix('/')
         self.auth = 'Bearer '+ auth
         
         self.users = DashUserManager(self)
@@ -32,12 +33,14 @@ class Dashactyl:
         
         Performs an API request to the path then returns a dict response.
         '''
-        if method not in ('GET', 'POST', 'DELETE'):
-            raise ValueError("method must be 'GET', 'POST', or 'DELETE'.")
+        if method not in ('GET', 'POST', 'PATCH', 'DELETE'):
+            raise ValueError("method must be 'GET', 'POST', 'PATCH', or 'DELETE'.")
         
         req = requests.get
         if method == 'POST':
             req = requests.post
+        elif method == 'PATCH':
+            req = requests.patch
         elif method == 'DELETE':
             req = requests.delete
         
@@ -64,4 +67,6 @@ class Dashactyl:
     
     def ping(self):
         '''Pings the Dashactyl API.'''
-        return self.request('GET', '/api')
+        start = time()
+        self.request('GET', '/api')
+        return time() - start
