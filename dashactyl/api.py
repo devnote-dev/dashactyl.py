@@ -65,7 +65,7 @@ class Dashactyl:
                 'code': res.status_code,
                 'message': res.reason}
     
-    def ping(self):
+    def ping(self) -> float:
         '''Pings the Dashactyl API.'''
         start = time()
         self.request('GET', '/api')
