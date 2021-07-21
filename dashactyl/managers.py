@@ -1,6 +1,7 @@
 from .api import Dashactyl
 from .structures import DashServer, DashUser, Coupon
-from typing import Union, List
+from typing import Union, Optional, List
+from types import FunctionType
 
 
 __all__ = ['CoinsManager',
@@ -177,7 +178,7 @@ class ResourceManager:
         return NotImplemented
 
 
-class DashServerManager:
+class DashUserServerManager:
     def __init__(self, client: Dashactyl, *data: Union[dict, DashServer]):
         '''`client` - The Dashactyl client
         
@@ -213,7 +214,14 @@ class DashServerManager:
         
         return res
     
-    def get(self, id: str) -> DashServer:
+    def find(self, fn: FunctionType) -> Optional[DashServer]:
+        for server in self.cache:
+            if fn(server):
+                return server
+        
+        return None
+    
+    def get(self, id: str) -> Optional[DashServer]:
         '''`id` - The identifier or UUID of the server
         
         Gets a server from the cache, or fetches directly if not available.
@@ -280,7 +288,27 @@ class DashServerManager:
         if res['status'] != 'success':
             return res
         
-        return
+        return None
+
+
+class DashServerManager:
+    def __init__(self, client: Dashactyl):
+        self.client = client
+        self.cache = {}
+    
+    def fetch(self, user: Union[int, Dashactyl], id: str):
+        # will be implemented soon
+        return NotImplemented
+    
+    def get(self, id: str) -> Optional[DashServer]:
+        for k in self.cache.keys():
+            if id in k:
+                return self.cache[k]
+        
+        return None
+    
+    def get_manager_for(user: DashUser) -> DashUserServerManager:
+        return user.servers
 
 
 class CouponManager:
@@ -354,7 +382,7 @@ class CouponManager:
         if res['status'] != 'success':
             return res
         
-        return
+        return None
 
 
 class DashUserManager:
@@ -366,7 +394,7 @@ class DashUserManager:
         self.client = client
         self.cache = {}
     
-    def fetch(self, id: int) -> DashUser:
+    def fetch(self, id: int) -> Optional[DashUser]:
         '''`id` - The ID of the user
         
         Fetches a user from the API directly.
@@ -379,7 +407,7 @@ class DashUserManager:
         self.cache[u.uuid] = u
         return u
     
-    def get(self, id: Union[int, str]) -> DashUser:
+    def get(self, id: Union[int, str]) -> Optional[DashUser]:
         '''`id` - The ID of the user
         
         Gets a user from the cache, or fetches directly if unavailable.
@@ -389,9 +417,16 @@ class DashUserManager:
                 return self.cache[k]
         
         if type(id) == str:
-            raise Exception('user not found, try with ID instead')
+            raise DashUserWarning('user not found, try with ID instead')
         
         return self.fetch(id)
+    
+    def find(self, fn: FunctionType) -> Optional[DashUser]:
+        for user in self.cache:
+            if fn(user):
+                return user
+        
+        return None
     
     def remove(self, user: Union[int, str, DashUser]):
         '''`id` - The ID of the user
