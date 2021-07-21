@@ -1,7 +1,7 @@
 # Dashdactyl.py Class Structures
 from .api import Dashactyl
-from .managers import MAX_AMOUNT, CoinsManager, ResourceManager, DashServerManager
-from typing import Union
+from .managers import MAX_AMOUNT, CoinsManager, ResourceManager, DashUserServerManager
+from typing import Optional
 
 
 __all__ = ['DashUser', 'DashServer', 'Coupon']
@@ -14,25 +14,25 @@ class DashUser:
     def __init__(self, client: Dashactyl, data: dict):
         att = data['userinfo']['attributes']
         self.client = client
-        self.id = att['id']
-        self.uuid = att['uuid']
-        self.admin = att['root_admin']
+        self.id: int = att['id']
+        self.uuid: str = att['uuid']
+        self.is_admin: bool = att['root_admin']
         
-        self.email = att['email']
+        self.email: str = att['email']
         self.password = None # Fetch on funcion call
         self.ip = None # Fetch on function call
-        self.username = att['username']
-        self.firstname = att['first_name']
-        self.lastname = att['last_name']
+        self.username: str = att['username']
+        self.firstname: str = att['first_name']
+        self.lastname: str = att['last_name']
         
-        self.language = att['language']
-        self.tfa = att['2fa'] or False
+        self.language: str = att['language']
+        self.tfa: bool = att['2fa'] or False
         
-        self.created_at = att['created_at']
-        self.updated_at = att['updated_at'] or None
+        self.created_at: str = att['created_at']
+        self.updated_at: str = att['updated_at'] or None
         
         self.coins = CoinsManager(client, self, data)
-        self.servers = DashServerManager(client, att)
+        self.servers = DashUserServerManager(client, att)
         self.resources = ResourceManager(self, data)
     
     @property
@@ -68,30 +68,31 @@ class DashUser:
 
 
 # TODO: helper functions for server class
+# TODO: DashServerResourceManager class
 class DashServer:
     def __init__(self, client: Dashactyl, data: dict):
         att = data['attributes']
         self.client = client
-        self.id = att['id']
-        self.uuid = att['uuid']
-        self.identifier = att['identifier']
-        self.name = att['name']
-        self.description = att['description']
-        self.status = att['status'] or None
-        self.suspended = att['suspended']
-        self.limits = att['limits']
-        self.feature_limits = att['feature_limits']
-        self.user = att['user']
+        self.id: int = att['id']
+        self.uuid: str = att['uuid']
+        self.identifier: str = att['identifier']
+        self.name: str = att['name']
+        self.description: str = att['description']
+        self.status: str = att['status'] or None
+        self.is_suspended: bool = att['suspended']
+        self.limits: dict = att['limits']
+        self.feature_limits: dict = att['feature_limits']
+        self.user: int = att['user']
         self.owner = None # Fetch on function call
-        self.node = att['node']
-        self.allocation = att['allocation']
-        self.nest = att['nest']
-        self.egg = att['egg']
-        self.container = att['container']
-        self.created_at = att['created_at']
-        self.updated_at = att['updated_at'] or None
+        self.node: int = att['node']
+        self.allocation: int = att['allocation']
+        self.nest: int = att['nest']
+        self.egg: int = att['egg']
+        self.container: dict = att['container']
+        self.created_at: str = att['created_at']
+        self.updated_at: str = att['updated_at'] or None
     
-    def get_owner(self) -> Union[DashUser, None]:
+    def get_owner(self) -> Optional[DashUser]:
         '''Gets the owner of the server. May return `None` if not available.'''
         if not self.owner:
             for user in self.client.users.cache:
@@ -139,9 +140,9 @@ class DashServer:
 
 class Coupon:
     def __init__(self, data: dict):
-        self.code = data['code']
-        self.coins = data['coins'] or 0
-        self.ram = data['ram'] or 0
-        self.disk = data['disk'] or 0
-        self.cpu = data['cpu'] or 0
-        self.servers = data['servers'] or 0
+        self.code: str = data['code']
+        self.coins: int = data['coins'] or 0
+        self.ram: float = data['ram'] or 0
+        self.disk: float = data['disk'] or 0
+        self.cpu: float = data['cpu'] or 0
+        self.servers: int = data['servers'] or 0
