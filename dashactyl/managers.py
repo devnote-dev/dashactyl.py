@@ -179,7 +179,7 @@ class ResourceManager:
 
 
 class DashUserServerManager:
-    def __init__(self, client: Dashactyl, *data: Union[dict, DashServer]):
+    def __init__(self, client: Dashactyl, user: DashUser, *data: Union[dict, DashServer]):
         '''`client` - The Dashactyl client
         
         `data` - The data to resolve servers from
@@ -187,8 +187,9 @@ class DashUserServerManager:
         Creates a new manager for client servers.
         '''
         self.client = client
+        self.user = user
         self.cache = {}
-        self.__patch(*data)
+        self.__patch(data)
     
     def __patch(self, *data):
         for s in data:
@@ -197,22 +198,6 @@ class DashUserServerManager:
             else:
                 s = DashServer(self.client, s)
                 self.cache[s.uuid] = s
-    
-    def resolve(self, data: dict) -> List[DashServer]:
-        '''`data` - The data to resolve servers from
-        
-        Resolves servers from raw user data.
-        '''
-        if 'relationships' in data:
-            # fallback for invalid or malformed data
-            raise KeyError('relationships not present in data')
-        
-        res = []
-        for o in data['relationships']['servers']['data']:
-            s = DashServer(self.client, o)
-            res.append(s)
-        
-        return res
     
     def find(self, fn: FunctionType) -> Optional[DashServer]:
         for server in self.cache:
@@ -258,17 +243,18 @@ class DashUserServerManager:
             0 < cpu > MAX_AMOUNT):
             raise ValueError('server specs params must be between 1 and 9 hundred-trillion')
         
-        data = self.client.request('GET',
-                                    f'/create?name={name}' \
-                                    f'&ram={str(ram)}' \
-                                    f'&disk={str(disk)}' \
-                                    f'&cpu={str(cpu)}' \
-                                    f'&egg={egg}' \
-                                    f'&location={location}')
+        data = self.client.request('POST', '/api/createserver',
+                                    {'userid': str(self.user.id),
+                                    'name': name,
+                                    'ram': str(ram),
+                                    'disk': str(disk),
+                                    'cpu': str(cpu),
+                                    'egg': egg,
+                                    'location': location})
         if data['status'] != 'success':
             return data
         
-        s = DashServer(self.client, data)
+        s = DashServer(self.client, data['data'])
         self.cache[s.uuid] = s
         return s
     
@@ -307,7 +293,7 @@ class DashServerManager:
         
         return None
     
-    def get_manager_for(user: DashUser) -> DashUserServerManager:
+    def manager_for(user: DashUser) -> DashUserServerManager:
         return user.servers
 
 
@@ -320,13 +306,30 @@ class CouponManager:
         self.client = client
         self.cache = {}
     
-    def fetch(self, code: str=None):
-        # not implemented on Dashdactyl's side
-        return NotImplemented
+    def fetch(self, code: str=None) -> Optional[Union[Coupon, List[Coupon]]]:
+        data = self.client.request('GET', '/api/coupons'+ f'?code={code}' if code is not None else '')
+        if data['status'] != 'success':
+            return data
+        
+        if 'coupon' in data:
+            c = Coupon(data['coupon'])
+            self.cache[c.code] = c
+            return c
+        else:
+            res = []
+            for o in data['coupons']:
+                c = Coupon(o)
+                self.cache[c.code] = c
+                res.append(c)
+            
+            return res
     
-    def get(self, code: str):
-        # broken because of fetch
-        return NotImplemented
+    def get(self, code: str) -> Optional[Coupon]:
+        for k in self.cache.keys():
+            if code == k:
+                return self.cache[k]
+        
+        return self.fetch(code)
     
     def create(self,
                 code: str=None,
@@ -356,13 +359,13 @@ class CouponManager:
             0 < servers > 10):
             raise ValueError('amount must be between 1 and 9 hundred-trillion (or servers which is 10)')
         
-        if (not code and not (coins or ram or disk or cpu or servers)):
+        if not code and not (coins or ram or disk or cpu or servers):
             raise ValueError('no valid parameters provided')
         
         data = self.client.request('POST',
-                                    '/createcoupon',
+                                    '/api/createcoupon',
                                     {'code': code, 'coins': coins, 'ram': ram, 'disk': disk, 'cpu': cpu, 'servers': servers})
-        if 'status' in data:
+        if data['status'] != 'success':
             return data
         
         c = Coupon(data)
@@ -378,7 +381,7 @@ class CouponManager:
             del self.cache[code]
         
         # This should be DELETE...
-        res = self.client.request('POST', '/revokecoupon', {'code': code})
+        res = self.client.request('DELETE', f'/api/revokecoupon/{code}')
         if res['status'] != 'success':
             return res
         
@@ -399,7 +402,7 @@ class DashUserManager:
         
         Fetches a user from the API directly.
         '''
-        data = self.client.request('GET', f'/api/userinfo?id={str(id)}')
+        data = self.client.request('GET', f'/api/userinfo/{str(id)}')
         if data['status'] != 'success':
             return data
         
