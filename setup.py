@@ -1,5 +1,5 @@
 from setuptools import setup
-from dashactyl import __version__
+from dashactylpy import __version__
 
 
 long_desc = ''
@@ -14,7 +14,7 @@ setup(name='dashactylpy',
         url='https://github.com/devnote-dev/dashactyl.py',
         license='MIT',
         version=__version__,
-        packages=['dashactyl'],
+        packages=['dashactylpy'],
         description='An interactive API wrapper for Dashactyl in Python.',
         long_description=long_desc,
         long_desription_content_type='text/markdown',

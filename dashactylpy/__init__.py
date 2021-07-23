@@ -6,7 +6,7 @@ Author: Devonte <https://github.com/devnote-dev>
 License: MIT
 '''
 
-__title__ = 'dashactyl.py'
+__title__ = 'dashactylpy'
 __author__ = 'Devonte'
 __copyright__ = 'MIT'
 __version__ = '0.0.4a'
