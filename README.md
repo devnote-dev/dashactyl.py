@@ -1,6 +1,6 @@
 <h1 align="center"><img src="https://cdn.discordapp.com/attachments/783061830842974280/866772458027089990/dashactyl.png" alt="dashactyl-py"></img></h1>
 <h1 align="center">Dashactyl.py</h1>
-<h3 align="center"><i>An up-to-date API wrapper for Dashactyl</i></h3>
+<h3 align="center"><i>An up-to-date API wrapper for <a href="https://github.com/real2two/dashactyl">Dashactyl</a></i></h3>
 
 ## Features
 - Simple class-based structure
