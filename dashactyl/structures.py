@@ -19,8 +19,6 @@ class DashUser:
         self.is_admin: bool = att['root_admin']
         
         self.email: str = att['email']
-        self.password = None # Fetch on funcion call
-        self.ip = None # Fetch on function call
         self.username: str = att['username']
         self.firstname: str = att['first_name']
         self.lastname: str = att['last_name']
@@ -32,39 +30,25 @@ class DashUser:
         self.updated_at: str = att['updated_at'] or None
         
         self.coins = CoinsManager(client, self, data)
-        self.servers = DashUserServerManager(client, att)
+        self.servers = DashUserServerManager(client, self, att)
         self.resources = ResourceManager(self, data)
     
     @property
     def tag(self) -> str:
         return self.firstname + self.lastname
     
-    def get_ip(self) -> str:
-        '''Fetches the IP of the user.'''
-        if self.ip is None:
-            res = self.client.request('GET', f'/getip?id=${self.id}')
-            if 'status' in res:
-                return res
-            
-            self.ip = res['ip']
-            return res['ip']
-        
-        return self.ip
-    
-    def get_password(self):
-        '''Fetches the user's password.'''
-        # I dont know the endpoint for this...
-        return NotImplemented
-    
     def regen(self):
         '''Regenerates the user's password.'''
-        # Not implemented on Dashactyl
+        # Not implemented on Dashactyl yet
         return NotImplemented
     
     def remove(self):
-        '''Removes (or deletes) the user's account.'''
-        # This should be changed to DELETE...
-        return self.client.request('GET', f'/api/remove_account')
+        '''Removes (or deletes) the user's account. Returns `None` on success.'''
+        res = self.client.request('DELETE', f'/api/removeaccount/{str(self.id)}')
+        if res['status'] != 'success':
+            return res
+        
+        return None
 
 
 # TODO: helper functions for server class
@@ -83,7 +67,7 @@ class DashServer:
         self.limits: dict = att['limits']
         self.feature_limits: dict = att['feature_limits']
         self.user: int = att['user']
-        self.owner = None # Fetch on function call
+        self.owner: DashUser = None # Fetch on function call
         self.node: int = att['node']
         self.allocation: int = att['allocation']
         self.nest: int = att['nest']
@@ -129,13 +113,16 @@ class DashServer:
         
         return self
     
-    def delete(self) -> bool:
-        '''Deletes the server.'''
-        res = self.client.request('GET', f'/delete?id={self.id}')
-        if res['status']:
-            return False
+    def delete(self):
+        '''Deletes the server. Returns `None` on success.'''
+        if not self.owner:
+            self.get_owner()
         
-        return True
+        res = self.client.request('DELETE', f'/api/deleteserver/{str(self.owner.id)}/{str(self.id)}')
+        if res['status'] != 'success':
+            return res
+        
+        return None
 
 
 class Coupon:
