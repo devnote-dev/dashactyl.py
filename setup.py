@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from dashactylpy import __version__
 
 
@@ -14,7 +14,7 @@ setup(name='dashactylpy',
         url='https://github.com/devnote-dev/dashactyl.py',
         license='MIT',
         version=__version__,
-        packages=['dashactylpy'],
+        packages=find_packages('dashactylpy'),
         description='An interactive API wrapper for Dashactyl in Python.',
         long_description=long_desc,
         long_desription_content_type='text/markdown',
