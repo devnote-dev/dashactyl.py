@@ -1,4 +1,4 @@
-from ..dashactyl import Dashactyl
+from dashactylpy import Dashactyl
 
 dash = Dashactyl('https://client.dynox.us', '$omeFak3AP1Key') # I'm not creative
 print(dash.ping())
