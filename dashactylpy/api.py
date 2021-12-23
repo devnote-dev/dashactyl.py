@@ -1,8 +1,10 @@
 import requests
 from json import dumps
 from time import time
-from .managers import DashServerManager, DashUserManager, CouponManager
+from . import DashServerManager, DashUserManager, CouponManager
 
+
+__all__ = ('Dashactyl')
 
 class Dashactyl:
     '''# Dashactyl.py

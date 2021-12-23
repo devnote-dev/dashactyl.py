@@ -1,10 +1,9 @@
 # Dashdactyl.py Class Structures
-from .api import Dashactyl
-from .managers import MAX_AMOUNT, CoinsManager, ResourceManager, DashUserServerManager
+from . import MAX_AMOUNT, Dashactyl, CoinsManager, ResourceManager, DashUserServerManager
 from typing import Optional
 
 
-__all__ = ['DashUser', 'DashServer', 'Coupon']
+__all__ = ('DashUser', 'DashServer', 'Coupon')
 
 class DashUser:
     '''Represents a Dashactyl-Pterodactyl User.'''

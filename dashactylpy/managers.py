@@ -1,14 +1,16 @@
-from .api import Dashactyl
-from .structures import DashServer, DashUser, Coupon
+from . import Dashactyl, DashServer, DashUser, Coupon
 from typing import Union, Optional, List
 from types import FunctionType
 
 
-__all__ = ['CoinsManager',
-            'ResourceManager',
-            'DashServerManager',
-            'CouponManager',
-            'DashUserManager']
+__all__ = (
+    'CoinsManager',
+    'ResourceManager',
+    'DashServerManager',
+    'CouponManager',
+    'DashUserManager',
+    'DashUserServerManager'
+)
 
 MAX_AMOUNT = int('9' * 15)
 

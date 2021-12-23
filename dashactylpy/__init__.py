@@ -9,7 +9,7 @@ License: MIT
 __title__ = 'dashactylpy'
 __author__ = 'Devonte'
 __copyright__ = 'MIT'
-__version__ = '0.0.4a'
+__version__ = '0.0.5a'
 
 from .api import *
 from .managers import *
