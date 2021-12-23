@@ -11,6 +11,7 @@ __author__ = 'Devonte'
 __copyright__ = 'MIT'
 __version__ = '0.0.5a'
 
-from .api import *
-from .managers import *
-from .structures import *
+from .api import Dashactyl
+from .managers import CoinsManager, DashUserManager, ResourceManager, \
+    CouponManager, DashUserServerManager
+from .structures import DashUser, DashServer, Coupon

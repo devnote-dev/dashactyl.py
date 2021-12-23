@@ -1,4 +1,4 @@
-from . import Dashactyl, DashServer, DashUser, Coupon
+from . import DashServer, DashUser, Coupon
 from typing import Union, Optional, List
 from types import FunctionType
 
@@ -20,7 +20,7 @@ class DashUserWarning(Exception):
 
 
 class CoinsManager:
-    def __init__(self, client: Dashactyl, user: Union[int, DashUser], data: dict):
+    def __init__(self, client, user: Union[int, DashUser], data: dict):
         '''`client` - The Dashactyl client
         
         `user` - The Dashactyl user the manager is for
@@ -97,7 +97,7 @@ class CoinsManager:
 
 # TODO: helper methods for resources
 class ResourceManager:
-    def __init__(self, client: Dashactyl, user: Union[int, DashUser], data: dict):
+    def __init__(self, client, user: Union[int, DashUser], data: dict):
         '''`client` - The Dashactyl client
         
         `user` - The Dashactyl user the manager is for
@@ -162,7 +162,7 @@ class ResourceManager:
 
 
 class DashUserServerManager:
-    def __init__(self, client: Dashactyl, user: DashUser, *data: Union[dict, DashServer]):
+    def __init__(self, client, user: DashUser, *data: Union[dict, DashServer]):
         '''`client` - The Dashactyl client
         
         `data` - The data to resolve servers from
@@ -261,11 +261,11 @@ class DashUserServerManager:
 
 
 class DashServerManager:
-    def __init__(self, client: Dashactyl):
+    def __init__(self, client):
         self.client = client
         self.cache = {}
     
-    def fetch(self, user: Union[int, Dashactyl], id: str):
+    def fetch(self, user: int, id: str):
         # will be implemented soon
         return NotImplemented
     
@@ -281,7 +281,7 @@ class DashServerManager:
 
 
 class CouponManager:
-    def __init__(self, client: Dashactyl):
+    def __init__(self, client):
         '''`client` - The Dashactyl client
         
         Creates a new manager for client coupons.
@@ -372,7 +372,7 @@ class CouponManager:
 
 
 class DashUserManager:
-    def __init__(self, client: Dashactyl):
+    def __init__(self, client):
         '''`client` - The Dashactyl client
         
         Creates a new manager for client users.

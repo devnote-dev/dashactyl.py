@@ -1,7 +1,7 @@
 import requests
 from json import dumps
 from time import time
-from . import DashServerManager, DashUserManager, CouponManager
+from .managers import DashUserManager, DashServerManager, CouponManager
 
 
 __all__ = ('Dashactyl')

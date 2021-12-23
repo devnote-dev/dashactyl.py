@@ -1,5 +1,5 @@
 # Dashdactyl.py Class Structures
-from . import MAX_AMOUNT, Dashactyl, CoinsManager, ResourceManager, DashUserServerManager
+from . import MAX_AMOUNT, CoinsManager, ResourceManager, DashUserServerManager
 from typing import Optional
 
 
@@ -7,7 +7,7 @@ __all__ = ('DashUser', 'DashServer', 'Coupon')
 
 class DashUser:
     '''Represents a Dashactyl-Pterodactyl User.'''
-    def __init__(self, client: Dashactyl, data: dict):
+    def __init__(self, client, data: dict):
         att = data['userinfo']['attributes']
         self.client = client
         self.id: int = att['id']
@@ -46,7 +46,7 @@ class DashUser:
 # TODO: helper functions for server class
 # TODO: DashServerResourceManager class
 class DashServer:
-    def __init__(self, client: Dashactyl, data: dict):
+    def __init__(self, client, data: dict):
         att = data['attributes']
         self.client = client
         self.id: int = att['id']
