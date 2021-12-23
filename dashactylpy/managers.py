@@ -31,29 +31,22 @@ class CoinsManager:
     
     def __call__(self) -> int:
         '''Returns the number of coins the user has or -1 if unavailable.'''
-        if isinstance(self.user, DashUser):
-            return self.amount
-        else:
-            return -1
+        return self.amount or -1
     
     def add(self, amount: int) -> int:
         '''`amount` - The number of coins to add
         
         Adds an amount of coins to the user's account. Returns the added coins on success.
         '''
-        if not self.user:
-            raise DashUserWarning('user not found')
+        if 0 < amount:
+            raise ValueError('amount must be greater than 0')
         
-        user = self.user
-        if isinstance(self.user, DashUser):
-            user = self.user.username
+        if amount > MAX_AMOUNT:
+            amount = MAX_AMOUNT
         
-        if 0 < amount > MAX_AMOUNT:
-            raise ValueError('amount must be between 1 and 9 hundred-trillion')
-        
-        res = self.client.request('POST', '/api/addcoins', {'id': str(user), 'amount': amount})
+        res = self.client.request('PATCH', '/api/addcoins', {'id': str(self.user.username), 'coins': amount})
         if res['status'] != 'success':
-            return res
+            raise Exception(res)
         
         self.amount += amount
         return self.amount
@@ -63,18 +56,6 @@ class CoinsManager:
         
         Removes an amount of coins from the user's account. Returns the removed coins on success.
         '''
-        if not self.user:
-            raise DashUserWarning('user not found')
-        
-        user = self.user
-        if isinstance(self.user, DashUser):
-            user = self.user.username
-        else:
-            user = self.client.users.get(self.user)
-        
-        if not user:
-            raise DashUserWarning('user not found')
-        
         amount = self.amount - amount
         if amount < 0:
             amount = 0
@@ -82,7 +63,7 @@ class CoinsManager:
         if 0 < amount > MAX_AMOUNT:
             raise ValueError('amount must be between 1 and 9 hundred-trillion')
         
-        res = self.client.request('POST', '/api/setcoins', {'id': str(user), 'amount': amount})
+        res = self.client.request('POST', '/api/setcoins', {'id': str(self.user.username), 'coins': amount})
         if res['status'] != 'success':
             return res
         

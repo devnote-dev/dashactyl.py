@@ -7,10 +7,7 @@ from typing import Optional
 __all__ = ['DashUser', 'DashServer', 'Coupon']
 
 class DashUser:
-    '''Represents a Dashactyl-Pterodactyl User.
-    
-    TODO: additional helper methods for resources
-    '''
+    '''Represents a Dashactyl-Pterodactyl User.'''
     def __init__(self, client: Dashactyl, data: dict):
         att = data['userinfo']['attributes']
         self.client = client
@@ -19,7 +16,7 @@ class DashUser:
         self.is_admin: bool = att['root_admin']
         
         self.email: str = att['email']
-        self.username: str = att['username']
+        self.username: int = att['username']
         self.firstname: str = att['first_name']
         self.lastname: str = att['last_name']
         
@@ -37,17 +34,13 @@ class DashUser:
     def tag(self) -> str:
         return self.firstname + self.lastname
     
-    def regen(self):
-        '''Regenerates the user's password.'''
-        # Not implemented on Dashactyl yet
-        return NotImplemented
-    
     def remove(self):
         '''Removes (or deletes) the user's account. Returns `None` on success.'''
         res = self.client.request('DELETE', f'/api/removeaccount/{str(self.id)}')
         if res['status'] != 'success':
-            return res
+            raise Exception('failed deleting user account')
         
+        del self.client.users.cache[self.uuid]
         return None
 
 
@@ -67,7 +60,7 @@ class DashServer:
         self.limits: dict = att['limits']
         self.feature_limits: dict = att['feature_limits']
         self.user: int = att['user']
-        self.owner: DashUser = None # Fetch on function call
+        self.owner: DashUser = None
         self.node: int = att['node']
         self.allocation: int = att['allocation']
         self.nest: int = att['nest']
