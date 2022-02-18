@@ -35,4 +35,4 @@ I'll make an official contributing guide later if needed.
 
 This repository is under the [MIT license](https://github.com/devnote-dev/dashactyl.py/blob/master/LICENSE).
 
-© 2021 devnote-dev
+© 2021-2022 devnote-dev
